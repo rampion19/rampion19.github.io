@@ -4,10 +4,10 @@ import Cart from './components/Cart/Cart';
 import Layout from './components/Layout/Layout';
 import Products from './components/Shop/Products';
 import Notification from './components/UI/Notification';
-import { uiActions } from './Store/ui-slice';
+import { fetchCartData, sendCartData } from './Store/cart-action';
 
 
-let initial = true;
+let isInitial = true;
 
 function App() {
 
@@ -17,43 +17,21 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(fetchCartData());
+  },[dispatch])
 
-    const sendCartData = async () => {
-      dispatch(uiActions.setNotification({
-        status: "pending",
-        title: "sending...",
-        message: "Sending cart item!"
-      }))
-
-      const res = await fetch("https://cart-redux-6cac5-default-rtdb.firebaseio.com/cart.json",
-        {
-          method: 'PUT',
-          body: JSON.stringify(cart),
-        }
-      )
-      if (res.ok) {
-        dispatch(uiActions.setNotification({
-          status: "success",
-          title: "success...",
-          message: "Sent cart item successfully!"
-        }))
-      } else {
-        throw new Error("failed")
-      }
-    }
-    if(initial){
-      initial = false;
+ 
+  useEffect(() => {
+    if (isInitial) {
+      isInitial = false;
       return;
     }
-    sendCartData().catch(error => {
-      dispatch(uiActions.setNotification({
-        status: "error",
-        title: "Error...",
-        message: "Sent cart item failed!"
-      }))
-    })
-  }, [cart, dispatch])
 
+    if (cart.changed) {
+      dispatch(sendCartData(cart));
+    }
+  }, [cart, dispatch]);
+  
   return (
     <Fragment>
       {notification && <Notification
